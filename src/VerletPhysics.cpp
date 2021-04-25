@@ -23,7 +23,7 @@ void VerletPhysics::generateTasks( Ra::Core::TaskQueue* q,
                     // First method with all masses equal
                     Ra::Core::Vector3f dv = spring->position - particle->position;
                     float distance = std::sqrt( dv.x() * dv.x() + dv.y() * dv.y() + dv.z() * dv.z() );
-                    float difference = particle->restLength - distance;
+                    float difference = particle->restLength[j] - distance;
                     float percent = difference / distance / 2;
                     Ra::Core::Vector3f offset = dv * percent;
                     if ( !particle->isLocked )
@@ -36,7 +36,7 @@ void VerletPhysics::generateTasks( Ra::Core::TaskQueue* q,
                     /*Ra::Core::Vector3f delta = objs[i]->springs[j].first->position - objs[i]->position;
                     float deltaLength = std::sqrt(
                         delta.x() * delta.x() + delta.y() * delta.y() + delta.z() * delta.z() );
-                    float diff = ( deltaLength - objs[i]->restLength ) / deltaLength;
+                    float diff = ( deltaLength - objs[i]->restLength[j] ) / deltaLength;
                     if (!objs[i]->isLocked)
                         objs[i]->position = objs[i]->position + ( delta * 0.5f * diff );
                     if (!objs[i]->springs[j].first->isLocked)
@@ -50,7 +50,7 @@ void VerletPhysics::generateTasks( Ra::Core::TaskQueue* q,
                     float deltaLength = std::sqrt( delta.x() * delta.x() + delta.y() * delta.y() + delta.z() * delta.z() );
                     float invMass1 = 1.f / particle->mass;
                     float invMass2 = 1.f / spring->mass;
-                    float diff = ( deltaLength - particle->restLength )
+                    float diff = ( deltaLength - particle->restLength[j] )
                             / ( deltaLength * ( invMass1 + invMass2 ) ) * particle->strength;
                     if (!particle->isLocked)
                         particle->position = particle->position + ( invMass1 * delta * diff );
@@ -66,12 +66,12 @@ void VerletPhysics::generateTasks( Ra::Core::TaskQueue* q,
     for (size_t i = 0; i < m_components.size(); i++) {
         auto particle = static_cast<VerletParticle*>( m_components[i].second );
         //! [ Render Springs ]
-        /*for( size_t j = 0; j < particle->springs.size(); j++ ) {
+        for( size_t j = 0; j < particle->springs.size(); j++ ) {
             particle->springs[j].second->setMesh(
                     Ra::Engine::Data::DrawPrimitives::Line(particle->position,
                                                            particle->springs[j].first->position,
                                                            Ra::Core::Utils::Color::Red()));
-        }*/
+        }
         //! [ Render Springs ]
 
         //! [ Render Particles ]

@@ -1,20 +1,14 @@
 #include "VerletParticle.hpp"
 #include "VerletPhysics.hpp"
-#include "VerletSpring.hpp"
 
 // Include Radium base application and its simple Gui
 #include <Gui/BaseApplication.hpp>
 #include <Gui/RadiumWindow/SimpleWindowFactory.hpp>
 
-#include <glm/glm.hpp>
-
 float w = 1.0;
 
 void verletCloth( Ra::Gui::BaseApplication &app, VerletPhysics* sys, int rows, int cols ) {
-
-    float l = glm::distance( glm::vec3( -10.f, 0.f, -10.f ), glm::vec3( -9.f, 0.f, -10 )  );
-
-    float radius = 0.1f;
+    float radius = 0.01f;
 
     std::vector<std::pair<Ra::Engine::Scene::Entity*, VerletParticle*>> objects;
     float z = -( rows / 2 );
@@ -42,7 +36,7 @@ void verletCloth( Ra::Gui::BaseApplication &app, VerletPhysics* sys, int rows, i
                 lock = true;
 
             //! [Create a KeyFramedGeometryComponent component with the cube]
-            auto c = new VerletParticle( "Cube Mesh", e, std::move( cube ), pos, lock, l );
+            auto c = new VerletParticle( "Cube Mesh", e, std::move( cube ), pos, lock );
             //! [Create a KeyFramedGeometryComponent component with the cube]
             //! [Create the demo animated component]
             objects.push_back( std::make_pair( e,c ) );
@@ -53,42 +47,92 @@ void verletCloth( Ra::Gui::BaseApplication &app, VerletPhysics* sys, int rows, i
 
     for( int i = 0; i < rows; i++ ) {
         for (int j = 0; j < cols; j++) {
-            std::vector<Spring> springs;
+            auto particle = objects[i*cols + j].second;
             if( i != cols-1 ){
-                auto line = Ra::Engine::Rendering::RenderObject::createRenderObject(
-                        "test_line",
-                        objects[i*cols + j].second,
-                        Ra::Engine::Rendering::RenderObjectType::Geometry,
-                        Ra::Engine::Data::DrawPrimitives::Line(objects[i*cols + j].second->position, objects[(i+1)*cols + j].second->position,
-                                                               Ra::Core::Utils::Color::Red()),
-                        {});
-                auto plainMaterial = std::make_shared<Ra::Engine::Data::PlainMaterial>("Plain Material");
-                plainMaterial->m_perVertexColor = true;
-                line->setMaterial(plainMaterial);
-                app.m_engine->getRenderObjectManager()->addRenderObject( line );
-                line->setVisible( false );
-                springs.push_back( std::make_pair( objects[(i+1)*cols + j].second, line ) );
+                particle->addSpring( objects[(i+1)*cols + j].second, app.m_engine->getRenderObjectManager() );
             }
             if( j != rows-1 ){
-                auto line = Ra::Engine::Rendering::RenderObject::createRenderObject(
-                        "test_line",
-                        objects[i*cols + j].second,
-                        Ra::Engine::Rendering::RenderObjectType::Geometry,
-                        Ra::Engine::Data::DrawPrimitives::Line(objects[i*cols + j].second->position, objects[(i*cols) + (j+1)].second->position,
-                                                               Ra::Core::Utils::Color::Red()),
-                        {});
-                auto plainMaterial = std::make_shared<Ra::Engine::Data::PlainMaterial>("Plain Material");
-                plainMaterial->m_perVertexColor = true;
-                line->setMaterial(plainMaterial);
-                app.m_engine->getRenderObjectManager()->addRenderObject( line );
-                line->setVisible( false );
-                springs.push_back( std::make_pair( objects[(i*cols) + (j+1)].second, line ) );
+                particle->addSpring( objects[(i*cols) + (j+1)].second, app.m_engine->getRenderObjectManager() );
             }
-            objects[i*cols + j].second->springs = springs;
-
             //! [add the component to the animation system]
             sys->addComponent( objects[i*cols + j].first, objects[i*cols + j].second );
         }
+    }
+}
+
+void createVerletParticle( Ra::Core::Vector3f pos, float radius, Ra::Gui::BaseApplication &app, std::vector<std::pair<Ra::Engine::Scene::Entity*, VerletParticle*>> &objects ){
+    //! [Create the demo animated component]
+    //! [Creating the cube]
+
+    auto halfExts = Ra::Core::Vector3f(radius, radius, radius);
+    Ra::Core::Aabb aabb(-halfExts, halfExts);
+    aabb.translate(pos);
+
+    auto cube = Ra::Core::Geometry::makeSharpBox(aabb, Ra::Core::Utils::Color::Red() );
+
+    //! [Creating the cube]
+
+    //! [Create the engine entity for the cube]
+    auto e = app.m_engine->getEntityManager()->createEntity( "Green cube " + std::to_string( 0 ) + " " + std::to_string( 1 ) );
+    //! [Create the engine entity for the cube]
+
+
+    //! [Create a KeyFramedGeometryComponent component with the cube]
+    auto c = new VerletParticle( "Cube Mesh", e, std::move( cube ), pos, false );
+    //! [Create a KeyFramedGeometryComponent component with the cube]
+    //! [Create the demo animated component]
+    objects.push_back( std::make_pair( e,c ) );
+}
+
+void verletBox( Ra::Gui::BaseApplication &app, VerletPhysics* sys ) {
+    float radius = 0.01f;
+
+    std::vector<std::pair<Ra::Engine::Scene::Entity*, VerletParticle*>> objects;
+
+    createVerletParticle( Ra::Core::Vector3f( -5.0, 6.0, 0.0 ) , radius, app, objects ); //0
+    createVerletParticle( Ra::Core::Vector3f( -4.0, 6.0, 0.0 ) , radius, app, objects ); //1
+    createVerletParticle( Ra::Core::Vector3f( -5.0, 7.0, 0.0 ) , radius, app, objects ); //2
+    createVerletParticle( Ra::Core::Vector3f( -4.0, 7.0, 0.0 ) , radius, app, objects ); //3
+    createVerletParticle( Ra::Core::Vector3f( -5.0, 6.0, 1.0 ) , radius, app, objects ); //4
+    createVerletParticle( Ra::Core::Vector3f( -4.0, 6.0, 1.0 ) , radius, app, objects ); //5
+    createVerletParticle( Ra::Core::Vector3f( -5.0, 7.0, 1.0 ) , radius, app, objects ); //6
+    createVerletParticle( Ra::Core::Vector3f( -4.0, 7.0, 1.0 ) , radius, app, objects ); //7
+
+    auto particle = objects[0].second;
+    particle->addSpring( objects[1].second, app.m_engine->getRenderObjectManager() );
+    particle->addSpring( objects[2].second, app.m_engine->getRenderObjectManager() );
+    particle->addSpring( objects[4].second, app.m_engine->getRenderObjectManager() );
+
+
+    particle = objects[7].second;
+    particle->addSpring( objects[5].second, app.m_engine->getRenderObjectManager() );
+    particle->addSpring( objects[6].second, app.m_engine->getRenderObjectManager() );
+    particle->addSpring( objects[3].second, app.m_engine->getRenderObjectManager() );
+    particle->addSpring( objects[0].second, app.m_engine->getRenderObjectManager() );
+
+    particle = objects[2].second;
+    particle->addSpring( objects[6].second, app.m_engine->getRenderObjectManager() );
+    particle->addSpring( objects[3].second, app.m_engine->getRenderObjectManager() );
+    particle->addSpring( objects[5].second, app.m_engine->getRenderObjectManager() );
+
+    particle = objects[5].second;
+    particle->addSpring( objects[4].second, app.m_engine->getRenderObjectManager() );
+    particle->addSpring( objects[1].second, app.m_engine->getRenderObjectManager() );
+
+    particle = objects[4].second;
+    particle->addSpring( objects[6].second, app.m_engine->getRenderObjectManager() );
+    particle->addSpring( objects[3].second, app.m_engine->getRenderObjectManager() );
+
+    particle = objects[1].second;
+    particle->addSpring( objects[3].second, app.m_engine->getRenderObjectManager() );
+    particle->addSpring( objects[6].second, app.m_engine->getRenderObjectManager() );
+
+    createVerletParticle( Ra::Core::Vector3f( 0.0, 0.0, 0.0 ) , radius, app, objects ); //7
+
+
+    //! [add the component to the animation system]
+    for(size_t i = 0; i < objects.size(); i++ ){
+        sys->addComponent( objects[i].first, objects[i].second );
     }
 }
 
@@ -106,9 +150,10 @@ int main( int argc, char* argv[] ) {
     VerletPhysics* sys = new VerletPhysics;
     app.m_engine->registerSystem( "Verlet Physics", sys );
 
-    int rows = 20;
-    int cols = 20;
+    int rows = 10;
+    int cols = 10;
     verletCloth( app, sys, rows, cols );
+    //verletBox( app, sys );
 
     //! [Tell the window that something is to be displayed]
     app.m_mainWindow->prepareDisplay();

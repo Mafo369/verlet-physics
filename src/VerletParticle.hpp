@@ -12,7 +12,7 @@ class VerletParticle : public Ra::Engine::Scene::TriangleMeshComponent {
 public:
     VerletParticle(const std::string &name,
                    Ra::Engine::Scene::Entity *entity,
-                   Ra::Core::Geometry::TriangleMesh &&mesh, Ra::Core::Vector3f &pos, bool lock, float length );
+                   Ra::Core::Geometry::TriangleMesh &&mesh, Ra::Core::Vector3f &pos, bool lock );
 
     Ra::Core::Vector3f scale(Ra::Core::Vector3f vec, float s);
 
@@ -20,11 +20,13 @@ public:
 
     void scaleVelocity();
 
+    void addSpring( VerletParticle *particle, Ra::Engine::Rendering::RenderObjectManager *renderObjMan );
+
     void update(Scalar t);
 
     /// Attributes
     Ra::Core::Vector3f position, prev, temp, force;
-    float mass, drag, restLength, strength, r;
+    float mass, drag, strength, r;
     Scalar dtAgent;
     Ra::Core::Vector3f gravity;
     bool isLocked;
@@ -37,6 +39,8 @@ public:
     Ra::Core::Animation::KeyFramedValue <Ra::Core::Transform> m_transform;
 
     std::vector<std::pair<VerletParticle*, Ra::Engine::Rendering::RenderObject*>> springs;
+
+    std::vector<float> restLength;
 
 };
 
