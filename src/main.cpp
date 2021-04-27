@@ -7,6 +7,7 @@
 
 float w = 1.0;
 
+
 void verletCloth( Ra::Gui::BaseApplication &app, VerletPhysics* sys, int rows, int cols ) {
     float radius = 0.01f;
 
