@@ -1,4 +1,6 @@
 #include "VerletPhysics.hpp"
+#include <Engine/Scene/ComponentMessenger.hpp>
+#include <Core/RaCore.hpp>
 
 void VerletPhysics::generateTasks( Ra::Core::TaskQueue* q,
                                 const Ra::Engine::FrameInfo& info ) {
@@ -67,10 +69,21 @@ void VerletPhysics::generateTasks( Ra::Core::TaskQueue* q,
         auto particle = static_cast<VerletParticle*>( m_components[i].second );
         //! [ Render Springs ]
         for( size_t j = 0; j < particle->springs.size(); j++ ) {
-            particle->springs[j].second->setMesh(
-                    Ra::Engine::Data::DrawPrimitives::Line(particle->position,
-                                                           particle->springs[j].first->position,
-                                                           Ra::Core::Utils::Color::Red()));
+
+            auto meshPtr = particle->springs[j].second->getMesh().get();
+            auto oldMesh = dynamic_cast<Ra::Engine::Data::LineMesh*>( meshPtr );
+
+            if(oldMesh != nullptr){
+
+                auto &tab = oldMesh->getCoreGeometry().verticesWithLock();
+
+                tab[0] = particle->position;
+                tab[1] = particle->springs[j].first->position;
+
+                oldMesh->getCoreGeometry().verticesUnlock();
+
+            }
+
         }
         //! [ Render Springs ]
 

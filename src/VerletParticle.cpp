@@ -70,21 +70,9 @@ void VerletParticle::update( Scalar t ) {
             position = position + v;
             position = position + gravity;
 
-        }
-        else {
-            auto scaledForce = scale( gravity, dtAgent * dtAgent ); // Scale Gravity force
-            // Update Particles
-            force = force + scaledForce;
-            scaleVelocity();
-            temp = position;
-            position = position + ( ( position - prev ) + scale( force, mass ) );
-            prev = temp;
-            force.setZero();
-
-            Ra::Core::Vector3f v = ( position - prev ) + scale( force, mass );
             // Check bounds collision in x, y and z
             int box = 10;
-            float bounce = 0.9f;
+            float bounce = 1.0f;
             if( position.x() > box ) {
                 position = Ra::Core::Vector3f( box, position.y(), position.z() );
                 //position = Ra::Core::Vector3f( 2.f*box - position.x(), position.y(), position.z() );
@@ -110,6 +98,20 @@ void VerletParticle::update( Scalar t ) {
                 position = Ra::Core::Vector3f( position.x(), position.y(), -box );
                 prev = Ra::Core::Vector3f( prev.x(), prev.y(), position.z() + v.z() * bounce );
             }
+
+        }
+        else {
+            auto scaledForce = scale( gravity, dtAgent * dtAgent ); // Scale Gravity force
+            // Update Particles
+            force = force + scaledForce;
+            scaleVelocity();
+            temp = position;
+            position = position + ( ( position - prev ) + scale( force, mass ) );
+            prev = temp;
+            force.setZero();
+
+            Ra::Core::Vector3f v = ( position - prev ) + scale( force, mass );
+
         }
 
     }

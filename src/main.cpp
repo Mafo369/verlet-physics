@@ -9,7 +9,7 @@ float w = 1.0;
 
 
 void verletCloth( Ra::Gui::BaseApplication &app, VerletPhysics* sys, int rows, int cols ) {
-    float radius = 0.01f;
+    float radius = 0.1f;
 
     std::vector<std::pair<Ra::Engine::Scene::Entity*, VerletParticle*>> objects;
     float z = -( rows / 2 );
@@ -103,6 +103,9 @@ void verletBox( Ra::Gui::BaseApplication &app, VerletPhysics* sys ) {
     particle->addSpring( objects[1].second, app.m_engine->getRenderObjectManager() );
     particle->addSpring( objects[2].second, app.m_engine->getRenderObjectManager() );
     particle->addSpring( objects[4].second, app.m_engine->getRenderObjectManager() );
+    particle->addSpring( objects[3].second, app.m_engine->getRenderObjectManager() );
+    particle->addSpring( objects[6].second, app.m_engine->getRenderObjectManager() );
+    particle->addSpring( objects[5].second, app.m_engine->getRenderObjectManager() );
 
 
     particle = objects[7].second;
@@ -110,22 +113,33 @@ void verletBox( Ra::Gui::BaseApplication &app, VerletPhysics* sys ) {
     particle->addSpring( objects[6].second, app.m_engine->getRenderObjectManager() );
     particle->addSpring( objects[3].second, app.m_engine->getRenderObjectManager() );
     particle->addSpring( objects[0].second, app.m_engine->getRenderObjectManager() );
+    particle->addSpring( objects[1].second, app.m_engine->getRenderObjectManager() );
+    particle->addSpring( objects[4].second, app.m_engine->getRenderObjectManager() );
 
     particle = objects[2].second;
     particle->addSpring( objects[6].second, app.m_engine->getRenderObjectManager() );
     particle->addSpring( objects[3].second, app.m_engine->getRenderObjectManager() );
     particle->addSpring( objects[5].second, app.m_engine->getRenderObjectManager() );
+    particle->addSpring( objects[4].second, app.m_engine->getRenderObjectManager() );
+    particle->addSpring( objects[1].second, app.m_engine->getRenderObjectManager() );
+    particle->addSpring( objects[7].second, app.m_engine->getRenderObjectManager() );
 
     particle = objects[5].second;
     particle->addSpring( objects[4].second, app.m_engine->getRenderObjectManager() );
     particle->addSpring( objects[1].second, app.m_engine->getRenderObjectManager() );
+    particle->addSpring( objects[3].second, app.m_engine->getRenderObjectManager() );
+    particle->addSpring( objects[6].second, app.m_engine->getRenderObjectManager() );
 
     particle = objects[4].second;
     particle->addSpring( objects[6].second, app.m_engine->getRenderObjectManager() );
     particle->addSpring( objects[3].second, app.m_engine->getRenderObjectManager() );
+    particle->addSpring( objects[1].second, app.m_engine->getRenderObjectManager() );
 
     particle = objects[1].second;
     particle->addSpring( objects[3].second, app.m_engine->getRenderObjectManager() );
+    particle->addSpring( objects[6].second, app.m_engine->getRenderObjectManager() );
+
+    particle = objects[3].second;
     particle->addSpring( objects[6].second, app.m_engine->getRenderObjectManager() );
 
     createVerletParticle( Ra::Core::Vector3f( 0.0, 0.0, 0.0 ) , radius, app, objects ); //7
@@ -151,10 +165,10 @@ int main( int argc, char* argv[] ) {
     VerletPhysics* sys = new VerletPhysics;
     app.m_engine->registerSystem( "Verlet Physics", sys );
 
-    int rows = 10;
-    int cols = 10;
-    verletCloth( app, sys, rows, cols );
-    //verletBox( app, sys );
+    int rows = 20;
+    int cols = 20;
+    //verletCloth( app, sys, rows, cols );
+    verletBox( app, sys );
 
     //! [Tell the window that something is to be displayed]
     app.m_mainWindow->prepareDisplay();
