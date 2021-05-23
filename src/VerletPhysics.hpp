@@ -17,14 +17,13 @@
 #include <Gui/Viewer/CameraManipulator.hpp>
 #include "VerletParticle.hpp"
 
-#define SAMEMASS 1
-
 
 class VerletPhysics : public Ra::Engine::Scene::System {
 public:
     virtual void generateTasks(Ra::Core::TaskQueue *q,
                                const Ra::Engine::FrameInfo &info);
 
+    int type = 1; // All objects have the same mass then 1 else 0
 };
 
 #endif //RADIUMPROJECT_VERLETPHYSICS_H

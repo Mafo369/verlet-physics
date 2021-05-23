@@ -9,7 +9,7 @@ float w = 1.0;
 
 
 void verletCloth( Ra::Gui::BaseApplication &app, VerletPhysics* sys, int rows, int cols ) {
-    float radius = 0.1f;
+    float radius = 0.01f;
 
     std::vector<std::pair<Ra::Engine::Scene::Entity*, VerletParticle*>> objects;
     float z = -( rows / 2 );
@@ -39,6 +39,12 @@ void verletCloth( Ra::Gui::BaseApplication &app, VerletPhysics* sys, int rows, i
             //! [Create a KeyFramedGeometryComponent component with the cube]
             auto c = new VerletParticle( "Cube Mesh", e, std::move( cube ), pos, lock );
             //! [Create a KeyFramedGeometryComponent component with the cube]
+
+            //c->setMass( 10.f );
+            auto gravity = Ra::Core::Vector3f(0.0, -0.01, 0.0);
+            //auto gravity = Ra::Core::Vector3f(0.0, -9.81, 0.0); // 9.81m/s^2 down in the Y-axis
+            c->addBehavior( gravity );
+
             //! [Create the demo animated component]
             objects.push_back( std::make_pair( e,c ) );
             x = x + w;
@@ -61,7 +67,7 @@ void verletCloth( Ra::Gui::BaseApplication &app, VerletPhysics* sys, int rows, i
     }
 }
 
-void createVerletParticle( Ra::Core::Vector3f pos, float radius, Ra::Gui::BaseApplication &app, std::vector<std::pair<Ra::Engine::Scene::Entity*, VerletParticle*>> &objects ){
+void createVerletParticle( Ra::Core::Vector3f pos, float radius, Ra::Gui::BaseApplication &app, std::vector<std::pair<Ra::Engine::Scene::Entity*, VerletParticle*>> &objects, bool lock=false ){
     //! [Create the demo animated component]
     //! [Creating the cube]
 
@@ -79,25 +85,38 @@ void createVerletParticle( Ra::Core::Vector3f pos, float radius, Ra::Gui::BaseAp
 
 
     //! [Create a KeyFramedGeometryComponent component with the cube]
-    auto c = new VerletParticle( "Cube Mesh", e, std::move( cube ), pos, false );
+    auto c = new VerletParticle( "Cube Mesh", e, std::move( cube ), pos, lock );
+
+    //auto gravity = Ra::Core::Vector3f(0.0, -0.001, 0.0);
+    //auto gravity = Ra::Core::Vector3f(0.0, -9.81, 0.0); // 9.81m/s^2 down in the Y-axis
+    //c->addBehavior( gravity );
+    c->prev = pos + Ra::Core::Vector3f(0.05f, 0.01f, 0.01f );
+    c->addAttractionBehavior(Ra::Core::Vector3f(0.0, 3.0, 0.0), 10.f, 0.001f);
+
+    auto min = Ra::Core::Vector3f( -5.0, 0.0 + 0.1f, -5.0 );
+    auto max = Ra::Core::Vector3f( 5.0, 10.0, 5.0 );
+    Ra::Core::Aabb aabb_c( min, max );
+    c->addConstraint( aabb_c );
+
     //! [Create a KeyFramedGeometryComponent component with the cube]
     //! [Create the demo animated component]
     objects.push_back( std::make_pair( e,c ) );
 }
 
 void verletBox( Ra::Gui::BaseApplication &app, VerletPhysics* sys ) {
-    float radius = 0.01f;
+    float radius = 0.1f;
 
     std::vector<std::pair<Ra::Engine::Scene::Entity*, VerletParticle*>> objects;
 
-    createVerletParticle( Ra::Core::Vector3f( -5.0, 6.0, 0.0 ) , radius, app, objects ); //0
-    createVerletParticle( Ra::Core::Vector3f( -4.0, 6.0, 0.0 ) , radius, app, objects ); //1
-    createVerletParticle( Ra::Core::Vector3f( -5.0, 7.0, 0.0 ) , radius, app, objects ); //2
-    createVerletParticle( Ra::Core::Vector3f( -4.0, 7.0, 0.0 ) , radius, app, objects ); //3
-    createVerletParticle( Ra::Core::Vector3f( -5.0, 6.0, 1.0 ) , radius, app, objects ); //4
-    createVerletParticle( Ra::Core::Vector3f( -4.0, 6.0, 1.0 ) , radius, app, objects ); //5
-    createVerletParticle( Ra::Core::Vector3f( -5.0, 7.0, 1.0 ) , radius, app, objects ); //6
-    createVerletParticle( Ra::Core::Vector3f( -4.0, 7.0, 1.0 ) , radius, app, objects ); //7
+    createVerletParticle( Ra::Core::Vector3f( -0.5, 6.0, 0.0 ) , radius, app, objects ); //0
+    createVerletParticle( Ra::Core::Vector3f( 0.5, 6.0, 0.0 ) , radius, app, objects ); //1
+    createVerletParticle( Ra::Core::Vector3f( -0.5, 7.0, 0.0 ) , radius, app, objects ); //2
+    createVerletParticle( Ra::Core::Vector3f( 0.5, 7.0, 0.0 ) , radius, app, objects ); //3
+    createVerletParticle( Ra::Core::Vector3f( -0.5, 6.0, 1.0 ) , radius, app, objects ); //4
+    createVerletParticle( Ra::Core::Vector3f( 0.5, 6.0, 1.0 ) , radius, app, objects ); //5
+    createVerletParticle( Ra::Core::Vector3f( -0.5, 7.0, 1.0 ) , radius, app, objects ); //6
+    createVerletParticle( Ra::Core::Vector3f( 0.5, 7.0, 1.0 ) , radius, app, objects ); //7
+
 
     auto particle = objects[0].second;
     particle->addSpring( objects[1].second, app.m_engine->getRenderObjectManager() );
@@ -142,8 +161,9 @@ void verletBox( Ra::Gui::BaseApplication &app, VerletPhysics* sys ) {
     particle = objects[3].second;
     particle->addSpring( objects[6].second, app.m_engine->getRenderObjectManager() );
 
-    createVerletParticle( Ra::Core::Vector3f( 0.0, 0.0, 0.0 ) , radius, app, objects ); //7
+    createVerletParticle( Ra::Core::Vector3f( 0.0, 0.0, 0.0 ) , 0.01, app, objects, true ); //7
 
+    createVerletParticle( Ra::Core::Vector3f(0.0, 3.0, 0.0) , 0.1, app, objects, true );
 
     //! [add the component to the animation system]
     for(size_t i = 0; i < objects.size(); i++ ){
@@ -163,6 +183,7 @@ int main( int argc, char* argv[] ) {
 
     //! [Create the demo animation system]
     VerletPhysics* sys = new VerletPhysics;
+    //sys->type = 0;
     app.m_engine->registerSystem( "Verlet Physics", sys );
 
     int rows = 20;

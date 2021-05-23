@@ -11,39 +11,62 @@ VerletParticle::VerletParticle( const std::string &name,
                                                  std::move(mesh)),
         m_transform(Ra::Core::Transform::Identity(), 0_ra) {
 
-    position = pos;
-    prev = pos;
-    initPos = pos; // Necessary for translation
-    if ( SAMEMASS ) {
-        mass = 1.f; // 1kg
-        drag = 0.999; // rho * C * Area - simplified drag for this example
-        gravity = Ra::Core::Vector3f(0.0, -0.01, 0.0); // 9.81m/s^2 down in the Y-axis
-    } else {
-        mass = 10.f; // 1kg
-        drag = 0.999; // rho * C * Area - simplified drag for this example
-        gravity = Ra::Core::Vector3f(0.0, -9.81, 0.0); // 9.81m/s^2 down in the Y-axis
-        force = Ra::Core::Vector3f(0.f, 0.f, 0.f);
-        temp = Ra::Core::Vector3f(0.f, 0.f, 0.f);
-    }
+    position = pos; // Current position
+    prev = pos; // Previous position
+    initPos = pos; // Initial position - Necessary for translation
+    mass = 1.f; // 1kg
+    drag = 0.999; // rho * C * Area - simplified drag for this example
+    force = Ra::Core::Vector3f(0.f, 0.f, 0.f);
+    temp = Ra::Core::Vector3f(0.f, 0.f, 0.f);
     m_ro = getRoMgr()->getRenderObject(m_roIndex);
-    strength = 1.0f;
+    strength = 1.0f; // Strength of springs
     isLocked = lock;
 }
 
-Ra::Core::Vector3f VerletParticle::scale( Ra::Core::Vector3f vec, float s ) {
-    return Ra::Core::Vector3f( vec.x() * s, vec.y() * s, vec.z() * s );
+//! [Update Particle]
+void VerletParticle::updateSM( Scalar t ) {
+    // Update Point
+    if( !isLocked ){
+        Ra::Core::Vector3f v = ( position - prev ) * drag;
+        prev = position;
+        position = position + v;
+        for( auto b : behaviors ) {
+            position = position + b;
+        }
+        for( auto a : attractionBehaviors ) {
+            auto delta = a.first - position;
+            float dist = delta.x() * delta.x() + delta.y() * delta.y() + delta.z() * delta.z();
+            float radiusSq = a.second.first * a.second.first;
+            if(dist < radiusSq){
+                auto f = scale( normalizeTo( delta, 1.f - dist / radiusSq ), a.second.second * t );
+                position = position + f;
+            }
+        }
+        updateConstraints( v );
+    }
 }
 
-void VerletParticle::interpolateToSelf( float f ) {
-    prev.x() = prev.x() + ( ( position.x() - prev.x() ) * f );
-    prev.y() = prev.y() + ( ( position.y() - prev.y() ) * f );
-    prev.z() = prev.z() + ( ( position.z() - prev.z() ) * f );
-}
+void VerletParticle::updateDM( Scalar t ) {
+    // Update Point
+    if( !isLocked ){
+        for( auto b : behaviors ) {
+            auto scaledForce = scale(b, dtAgent * dtAgent); // Scale Gravity force
+            // Update Particles
+            force = force + scaledForce;
+            scaleVelocity();
+            temp = position;
+            position = position + ((position - prev) + scale(force, mass));
+            prev = temp;
+            force.setZero();
 
-void VerletParticle::scaleVelocity() {
-    interpolateToSelf( 1.f - drag );
+        }
+        Ra::Core::Vector3f v = ( position - prev ) + scale( force, mass );
+        updateConstraints( v );
+    }
 }
+//! [Update Particle]
 
+//! [Springs]
 void VerletParticle::addSpring( VerletParticle *particle, Ra::Engine::Rendering::RenderObjectManager *renderObjMan ) {
     auto line = Ra::Engine::Rendering::RenderObject::createRenderObject(
             "line",
@@ -60,59 +83,78 @@ void VerletParticle::addSpring( VerletParticle *particle, Ra::Engine::Rendering:
     springs.push_back( std::make_pair( particle, line ) );
     restLength.push_back( glm::distance( Ra::Core::toGlm( position ) , Ra::Core::toGlm( particle->position ) ) );
 }
+//! [Springs]
 
-void VerletParticle::update( Scalar t ) {
-    // Update Point
-    if( !isLocked ){
-        if( SAMEMASS ) {
-            Ra::Core::Vector3f v = ( position - prev ) * drag;
-            prev = position;
-            position = position + v;
-            position = position + gravity;
+//! [Behaviors]
+void VerletParticle::addBehavior( Ra::Core::Vector3f b ) {
+    behaviors.push_back(b);
+}
 
-            // Check bounds collision in x, y and z
-            int box = 10;
-            float bounce = 1.0f;
-            if( position.x() > box ) {
-                position = Ra::Core::Vector3f( box, position.y(), position.z() );
-                //position = Ra::Core::Vector3f( 2.f*box - position.x(), position.y(), position.z() );
-                prev = Ra::Core::Vector3f( position.x() + v.x() * bounce, prev.y(), prev.z() );
-            }
-            else if ( position.x() < -box ) {
-                position = Ra::Core::Vector3f( -box, position.y(), position.z() );
-                prev = Ra::Core::Vector3f( position.x() + v.x() * bounce, prev.y(), prev.z() );
-            }
-            if( position.y() > box ) {
-                position = Ra::Core::Vector3f( position.x(), box, position.z() );
-                prev = Ra::Core::Vector3f( prev.x(), position.y() + v.y() * bounce, prev.z() );
-            }
-            else if ( position.y() < 0 ) {
-                position = Ra::Core::Vector3f( position.x(), 0, position.z() );
-                prev = Ra::Core::Vector3f( prev.x(), position.y() + v.y() * bounce, prev.z() );
-            }
-            if( position.z() > box ) {
-                position = Ra::Core::Vector3f( position.x(), position.y(), box );
-                prev = Ra::Core::Vector3f( prev.x(), prev.y(), position.z() + v.z() * bounce );
-            }
-            else if ( position.z() < -box ) {
-                position = Ra::Core::Vector3f( position.x(), position.y(), -box );
-                prev = Ra::Core::Vector3f( prev.x(), prev.y(), position.z() + v.z() * bounce );
-            }
+void VerletParticle::addAttractionBehavior( Ra::Core::Vector3f attractor, float radius, float strengthAt ) {
+    attractionBehaviors.push_back(std::make_pair(attractor, std::make_pair(radius, strengthAt)));
+}
+//! [Behaviors]
 
+//! [Constraints]
+void VerletParticle::addConstraint( Ra::Core::Aabb c ) {
+    constraints.push_back( c );
+}
+
+void VerletParticle::updateConstraints( Ra::Core::Vector3f v ) {
+    for( auto c : constraints ) {
+        if (position.x() > c.max().x()) {
+            position = Ra::Core::Vector3f(c.max().x(), position.y(), position.z());
+            prev = Ra::Core::Vector3f(position.x() + v.x(), prev.y(), prev.z());
+        } else if (position.x() < c.min().x()) {
+            position = Ra::Core::Vector3f( c.min().x(), position.y(), position.z());
+            prev = Ra::Core::Vector3f(position.x() + v.x(), prev.y(), prev.z());
         }
-        else {
-            auto scaledForce = scale( gravity, dtAgent * dtAgent ); // Scale Gravity force
-            // Update Particles
-            force = force + scaledForce;
-            scaleVelocity();
-            temp = position;
-            position = position + ( ( position - prev ) + scale( force, mass ) );
-            prev = temp;
-            force.setZero();
-
-            Ra::Core::Vector3f v = ( position - prev ) + scale( force, mass );
-
+        if (position.y() > c.max().y()) {
+            position = Ra::Core::Vector3f(position.x(), c.max().y(), position.z());
+            prev = Ra::Core::Vector3f(prev.x(), position.y() + v.y(), prev.z());
+        } else if (position.y() < c.min().y()) {
+            position = Ra::Core::Vector3f(position.x(), c.min().y(), position.z());
+            prev = Ra::Core::Vector3f(prev.x(), position.y() + v.y(), prev.z());
         }
-
+        if (position.z() > c.max().z()) {
+            position = Ra::Core::Vector3f(position.x(), position.y(), c.max().z() );
+            prev = Ra::Core::Vector3f(prev.x(), prev.y(), position.z() + v.z() );
+        } else if (position.z() < c.min().z()) {
+            position = Ra::Core::Vector3f(position.x(), position.y(), c.min().z() );
+            prev = Ra::Core::Vector3f(prev.x(), prev.y(), position.z() + v.z() );
+        }
     }
 }
+//! [Constraints]
+
+//! [Vector Manipulation]
+Ra::Core::Vector3f VerletParticle::normalizeTo(Ra::Core::Vector3f v, float len){
+    float mag = std::sqrt( v.x() * v.x() + v.y() * v.y() + v.z() * v.z() );
+    if(mag > 0){
+        mag = len/mag;
+        v *= mag;
+    }
+    return v;
+}
+
+
+Ra::Core::Vector3f VerletParticle::scale( Ra::Core::Vector3f vec, float s ) {
+    return Ra::Core::Vector3f( vec.x() * s, vec.y() * s, vec.z() * s );
+}
+
+void VerletParticle::interpolateToSelf( float f ) {
+    prev.x() = prev.x() + ( ( position.x() - prev.x() ) * f );
+    prev.y() = prev.y() + ( ( position.y() - prev.y() ) * f );
+    prev.z() = prev.z() + ( ( position.z() - prev.z() ) * f );
+}
+
+void VerletParticle::scaleVelocity() {
+    interpolateToSelf( 1.f - drag );
+}
+//! [Vector Manipulation]
+
+//! [Setters]
+void VerletParticle::setMass( float m ) {
+    mass = m;
+}
+//! [Setters]

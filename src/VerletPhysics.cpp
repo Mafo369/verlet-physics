@@ -10,8 +10,13 @@ void VerletPhysics::generateTasks( Ra::Core::TaskQueue* q,
     for (size_t i = 0; i < m_components.size(); i++) {
         auto particle = static_cast<VerletParticle*>( m_components[i].second );
         particle->dtAgent = info.m_dt;
-        q->registerTask(new Ra::Core::FunctionTask(
-                std::bind(&VerletParticle::update, particle, info.m_animationTime), "spin"));
+        if( type ) {
+            q->registerTask(new Ra::Core::FunctionTask(
+                    std::bind(&VerletParticle::updateSM, particle, info.m_animationTime), "spin"));
+        }else {
+            q->registerTask(new Ra::Core::FunctionTask(
+                    std::bind(&VerletParticle::updateDM, particle, info.m_animationTime), "spin"));
+        }
     }
     //! [ Update points ]
 
@@ -21,7 +26,7 @@ void VerletPhysics::generateTasks( Ra::Core::TaskQueue* q,
             auto particle = static_cast<VerletParticle*>( m_components[i].second );
             for (size_t j = 0; j < particle->springs.size(); j++) {
                 auto spring = static_cast<VerletParticle*>( particle->springs[j].first );
-                if( SAMEMASS ) {
+                if( type ) {
                     // First method with all masses equal
                     Ra::Core::Vector3f dv = spring->position - particle->position;
                     float distance = std::sqrt( dv.x() * dv.x() + dv.y() * dv.y() + dv.z() * dv.z() );
