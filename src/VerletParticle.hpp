@@ -24,7 +24,7 @@ public:
     //! [Springs]
 
     //! [Behaviors]
-    void addBehavior( Ra::Core::Vector3f b );
+    void addBehavior( Ra::Core::Vector3f b ); // Constant behavior
     void addAttractionBehavior( Ra::Core::Vector3f attractor, float radius, float strength );
     //! [Behaviors]
 
@@ -34,7 +34,7 @@ public:
     //! [Constraints]
 
     //! [Vector Manipulation]
-    Ra::Core::Vector3f normalizeTo(Ra::Core::Vector3f v, float len);
+    Ra::Core::Vector3f normalizeTo( Ra::Core::Vector3f v, float len );
     Ra::Core::Vector3f scale( Ra::Core::Vector3f vec, float s );
     void interpolateToSelf( float f );
     void scaleVelocity();
@@ -46,11 +46,10 @@ public:
 
 
     /// Attributes
-    Ra::Core::Vector3f position, prev, temp, force;
+    Ra::Core::Vector3f initPos, position, prev, temp, force;
     float mass, drag, strength, r;
     Scalar dtAgent;
     bool isLocked;
-    Ra::Core::Vector3f initPos;
 
     /// The render object to animate
     std::shared_ptr <Ra::Engine::Rendering::RenderObject> m_ro;
@@ -67,7 +66,7 @@ public:
     /// Constant Behaviors list
     std::vector<Ra::Core::Vector3f> behaviors;
 
-    // Attraction Behaviors list
+    /// Attraction Behaviors list
     std::vector<std::pair<Ra::Core::Vector3f, std::pair<float, float>>> attractionBehaviors;
 
     /// Constraints list (Box Constraints)

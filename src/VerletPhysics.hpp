@@ -20,8 +20,8 @@
 
 class VerletPhysics : public Ra::Engine::Scene::System {
 public:
-    virtual void generateTasks(Ra::Core::TaskQueue *q,
-                               const Ra::Engine::FrameInfo &info);
+    virtual void generateTasks( Ra::Core::TaskQueue *q,
+                               const Ra::Engine::FrameInfo &info );
 
     int type = 1; // All objects have the same mass then 1 else 0
 };
