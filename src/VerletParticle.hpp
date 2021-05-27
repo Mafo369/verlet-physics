@@ -25,7 +25,8 @@ public:
 
     //! [Behaviors]
     void addBehavior( Ra::Core::Vector3f b ); // Constant behavior
-    void addAttractionBehavior( Ra::Core::Vector3f attractor, float radius, float strength );
+    void addAttractionBehavior( Ra::Core::Vector3f attractor, float radius, float strengthAt );
+    void addRepulsionBehavior( Ra::Core::Vector3f repulsor, float radius, float strengthAt );
     //! [Behaviors]
 
     //! [Constraints]
@@ -68,6 +69,9 @@ public:
 
     /// Attraction Behaviors list
     std::vector<std::pair<Ra::Core::Vector3f, std::pair<float, float>>> attractionBehaviors;
+
+    /// Repulsion Behaviors list
+    std::vector<std::pair<Ra::Core::Vector3f, std::pair<float, float>>> repulsionBehaviors;
 
     /// Constraints list (Box Constraints)
     std::vector<Ra::Core::Aabb> constraints;

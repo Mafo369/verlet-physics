@@ -20,7 +20,6 @@ void VerletPhysics::generateTasks( Ra::Core::TaskQueue* q,
     }
     //! [ Update points ]
 
-
     //! [ Update springs ]
     for( int z = 0; z < 3; z++ ) { // Loop several times to accelerate equilibrium
         for ( size_t i = 0; i < m_components.size(); i++ ) { // Loop through components

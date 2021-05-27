@@ -41,6 +41,15 @@ void VerletParticle::updateSM( Scalar t ) {
                 position = position + f;
             }
         }
+        for( auto a : repulsionBehaviors ) {
+            auto delta = a.first - position;
+            float dist = delta.x() * delta.x() + delta.y() * delta.y() + delta.z() * delta.z();
+            float radiusSq = a.second.first * a.second.first;
+            if(dist < radiusSq){
+                auto f = scale( normalizeTo( delta, 1.f - dist / radiusSq ), a.second.second * t );
+                position = position - f;
+            }
+        }
         updateConstraints( v );
     }
 }
@@ -65,6 +74,15 @@ void VerletParticle::updateDM( Scalar t ) {
                 position = position + f;
             }
         }
+        /*for( auto a : repulsionBehaviors ) {
+            auto delta = a.first - position;
+            float dist = delta.x() * delta.x() + delta.y() * delta.y() + delta.z() * delta.z();
+            float radiusSq = a.second.first * a.second.first;
+            if(dist < radiusSq){
+                auto f = scale( normalizeTo( delta, 1.f - dist / radiusSq ), a.second.second * t );
+                position = position - f;
+            }
+        }*/
         Ra::Core::Vector3f v = ( position - prev ) + scale( force, mass );
         updateConstraints( v );
     }
@@ -97,6 +115,10 @@ void VerletParticle::addBehavior( Ra::Core::Vector3f b ) {
 
 void VerletParticle::addAttractionBehavior( Ra::Core::Vector3f attractor, float radius, float strengthAt ) {
     attractionBehaviors.push_back( std::make_pair( attractor, std::make_pair( radius, strengthAt ) ) );
+}
+
+void VerletParticle::addRepulsionBehavior( Ra::Core::Vector3f repulsor, float radius, float strengthAt ) {
+    repulsionBehaviors.push_back( std::make_pair( repulsor, std::make_pair( radius, strengthAt ) ) );
 }
 //! [Behaviors]
 
