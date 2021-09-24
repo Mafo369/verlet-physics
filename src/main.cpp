@@ -9,7 +9,7 @@ float w = 1.0;
 
 
 void verletCloth( Ra::Gui::BaseApplication &app, VerletPhysics* sys, int rows, int cols ) {
-    float radius = 0.1f;
+    float radius = 0.01f;
 
     std::vector<std::pair<Ra::Engine::Scene::Entity*, VerletParticle*>> objects;
     float z = -( rows / 2 );
@@ -44,9 +44,9 @@ void verletCloth( Ra::Gui::BaseApplication &app, VerletPhysics* sys, int rows, i
             //! [Create a VerletParticle component with the cube]
 
             //! [Modify attributes and add behaviors/constraints]
-            //c->setMass( 50.f );
-            auto gravity = Ra::Core::Vector3f(0.0, -0.01, 0.0);
-            //auto gravity = Ra::Core::Vector3f(0.0, -9.81, 0.0); // 9.81m/s^2 down in the Y-axis
+            c->setMass( 50.f );
+            //auto gravity = Ra::Core::Vector3f(0.0, -0.01, 0.0);
+            auto gravity = Ra::Core::Vector3f(0.0, -9.81, 0.0); // 9.81m/s^2 down in the Y-axis
             c->addBehavior( gravity );
             //! [Modify attributes and add behaviors/constraints]
 
@@ -104,17 +104,17 @@ void createVerletParticle( Ra::Core::Vector3f pos, float radius, Ra::Gui::BaseAp
     //! [Create a VerletParticle component with the cube]
 
     //! [Modify attributes and add behaviors/constraints]
-    auto gravity = Ra::Core::Vector3f(0.0, -0.001, 0.0);
-    //auto gravity = Ra::Core::Vector3f(0.0, -9.81, 0.0); // 9.81m/s^2 down in the Y-axis
-    //c->addBehavior( gravity );
+    //auto gravity = Ra::Core::Vector3f(0.0, -0.001, 0.0);
+    auto gravity = Ra::Core::Vector3f(0.0, -9.81, 0.0); // 9.81m/s^2 down in the Y-axis
+    c->addBehavior( gravity );
     c->prev = pos + 1.5f * Ra::Core::Vector3f(-0.05f, 0.0f, -0.01f );
-    c->addAttractionBehavior(Ra::Core::Vector3f(0.0, 3.0, 0.0), 15.f, 0.001f);
-    c->addRepulsionBehavior(Ra::Core::Vector3f(0.0, 3.0, 0.0), 7.f, 0.001f);
+    //c->addAttractionBehavior(Ra::Core::Vector3f(0.0, 3.0, 0.0), 15.f, 0.01f);
+    //c->addRepulsionBehavior(Ra::Core::Vector3f(0.0, 3.0, 0.0), 7.f, 0.01f);
 
     auto min = Ra::Core::Vector3f( -5.0, 0.0 + 0.1f, -5.0 );
     auto max = Ra::Core::Vector3f( 5.0, 8.0, 5.0 );
     Ra::Core::Aabb aabb_c( min, max );
-    //c->addConstraint( aabb_c );
+    c->addConstraint( aabb_c );
     //! [Modify attributes and add behaviors/constraints]
 
     //! [Create the demo animated component]
@@ -189,8 +189,8 @@ void verletBox( Ra::Gui::BaseApplication &app, VerletPhysics* sys ) {
     //! [Create particle at the center of the scene for correct camera position]
 
     //! [Create attractor - for visual purposes only]
-    createVerletParticle( Ra::Core::Vector3f(0.0, 3.0, 0.0) , 0.1, app, objects, true,
-                          Ra::Core::Utils::Color::Blue() ); //9
+    //createVerletParticle( Ra::Core::Vector3f(0.0, 3.0, 0.0) , 0.1, app, objects, true,
+    //                      Ra::Core::Utils::Color::Blue() ); //9
     //objects[9].second->addRepulsionBehavior(Ra::Core::Vector3f(0.0, 3.0, 0.0), 10.f, 10.0f);
     //! [Create attractor - for visual purposes only]
 
@@ -246,16 +246,16 @@ int main( int argc, char* argv[] ) {
 
     //! [Create the physics system]
     VerletPhysics* sys = new VerletPhysics;
-    //sys->type = 0;
+    sys->type = 0;
     app.m_engine->registerSystem( "Verlet Physics", sys );
     //! [Create the physics system]
 
     //! [Create objects]
-    int rows = 30;
-    int cols = 30;
+    int rows = 25;
+    int cols = 25;
     //verletCloth( app, sys, rows, cols );
-    verletBox( app, sys );
-    //verletGravity( app, sys );
+    //verletBox( app, sys );
+    verletGravity( app, sys );
     //! [Create objects]
 
     //! [Tell the window that something is to be displayed]
